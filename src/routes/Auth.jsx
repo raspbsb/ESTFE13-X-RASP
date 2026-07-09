@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Box, Typography, TextField, Button, Divider } from "@mui/material";
+import { Box, Typography, TextField, Button, Divider, Snackbar } from "@mui/material";
 import { authService } from "../firebase";
 import {
   createUserWithEmailAndPassword,
@@ -7,6 +7,7 @@ import {
   signInWithPopup,
   GoogleAuthProvider,
 } from "firebase/auth";
+import { useRef } from "react";
 
 function Auth() {
   const [newAccount, setNewAccount] = useState(true);
@@ -14,6 +15,12 @@ function Auth() {
     email: "",
     password: "",
   });
+  const [error, setError] = useState("");
+  const [errorOpen, setErrorOpen] = useState(false);
+
+  const emailRef = useRef(null);
+  const passwordRef = useRef(null);
+
   const auth = authService;
   const provider = new GoogleAuthProvider();
 
@@ -40,6 +47,17 @@ function Auth() {
           const errorCode = error.code;
           const errorMessage = error.message;
           console.log(errorCode, errorMessage);
+          setError(
+            errorMessage.includes("email-already-in-use")
+              ? "이메일이 이미 사용중입니다."
+              : errorMessage,
+          );
+          setErrorOpen(true);
+
+          // emailRef.current.value = "";
+          // passwordRef.current.value = "";
+          setForm({ email: "", password: "" });
+          emailRef.current.focus();
         });
     } else {
       // 로그인
@@ -53,6 +71,13 @@ function Auth() {
           const errorCode = error.code;
           const errorMessage = error.message;
           console.log(errorCode, errorMessage);
+          setError(errorMessage);
+          setErrorOpen(true);
+
+          // emailRef.current.value = "";
+          // passwordRef.current.value = "";
+          setForm({ email: "", password: "" });
+          emailRef.current.focus();
         });
     }
   };
@@ -86,33 +111,46 @@ function Auth() {
       <Typography variant="h2" component="h2">
         {newAccount ? "회원가입 폼" : "로그인 폼"}
       </Typography>
+
       <Box component="form" sx={{ mt: 2 }} onSubmit={onSubmit}>
         <TextField
           fullWidth
           label="Email address"
           type="email"
           name="email"
-          defaultValue="Small"
           variant="outlined"
           onChange={handleChange}
+          inputRef={emailRef}
+          value={form.email}
         />
+
         <TextField
           sx={{ mt: 2 }}
           fullWidth
           label="Password"
           type="password"
           name="password"
-          defaultValue="Small"
           variant="outlined"
           onChange={handleChange}
+          value={form.password}
         />
+
         <Button sx={{ mt: 2 }} type="submit" variant="contained">
           {newAccount ? "회원가입" : "로그인"}
         </Button>
 
+        <Snackbar
+          open={errorOpen}
+          autoHideDuration={3000}
+          message={error}
+          onClose={() => {
+            setErrorOpen(false);
+          }}
+        />
+
         <Divider sx={{ my: 3 }} />
 
-        {/* 로그인/회원가입 전환 버튼 */}
+        {/* 구글 회원가입/로그인 버튼 */}
         <Button sx={{ mt: 2 }} type="button" variant="outlined" onClick={onGoogleSignIn}>
           {newAccount ? "구글로 회원가입" : "구글로 로그인"}
         </Button>
