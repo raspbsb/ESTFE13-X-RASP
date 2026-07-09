@@ -25,7 +25,7 @@ function App() {
     <>
       <Container>
         <h1>ESTFE-X-RASP</h1>
-        <Router isLoggedI={isLoggedIn} />
+        <Router isLoggedIn={isLoggedIn} />
       </Container>
     </>
   );
