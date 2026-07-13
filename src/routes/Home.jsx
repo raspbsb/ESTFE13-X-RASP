@@ -31,30 +31,38 @@ function Home({ userId }) {
   const [attachment, setAttachment] = useState(null);
   const fileInputRef = useRef(null);
 
-  // useEffect로 데이터 조회 결과를 변수명 comments에 할당
+  // 서버에서 코멘트 배열을 가져와서 comments 변수에 상태 저장하는 함수
   const getComments = async () => {
+    // 서버에 보낼 쿼리 : db의 comments 컬렉션에서 date필드 내림차순으로 내용 5개 가져오기
     const q = query(collection(db, "comments"), orderBy("date", "desc"), limit(5));
 
+    // firestore의 데이터를 실시간 감시하다가 데이터가 변경될 때마다 아래 함수 실행
     onSnapshot(q, querySnapshot => {
       // const querySnapshot = await getDocs(q);
       // console.log(querySnapshot);
       console.log(querySnapshot.docs);
-      const comments = [];
+
+      // QuerySnapshot을 객체 배열로 변환해서 앞에 id 추가
       const commentsArray = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+      // comments에 상태를 저장하고 리렌더링
       setComments(commentsArray);
     });
   };
 
+  // 첫 렌더링에서 서버에서 내용 가져오기
   useEffect(() => {
     getComments();
   }, []);
 
   console.log(comments);
 
+  // 텍스트필드 내용 변경될 때마다 값 저장
   const handleChange = e => {
     setComment(e.target.value);
   };
 
+  // submit(글쓰기 버튼 클릭) 되면 현재 접속된 계정의 유저 id, 현재 시간, 댓글 내용을 서버 DB에 추가하고 리렌더링, 실패하면 콘솔에 에러메시지
   const onSubmit = async e => {
     e.preventDefault();
     try {
@@ -66,6 +74,7 @@ function Home({ userId }) {
       });
 
       console.log("다음 글이 추가되었습니다 : ", docRef.id);
+      // 텍스트필드 초기화
       setComment("");
       // getComments();
     } catch (e) {

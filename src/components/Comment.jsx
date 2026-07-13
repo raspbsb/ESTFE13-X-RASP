@@ -7,6 +7,8 @@ export default function Comment({ item, isShown }) {
   const [editMode, setEditMode] = useState(false);
   const [comment, setComment] = useState(item.comment);
 
+  // console.log(db);
+
   // 글 삭제
   const handleDelete = async () => {
     if (!window.confirm("정말 삭제할까요?")) return;
@@ -18,15 +20,17 @@ export default function Comment({ item, isShown }) {
     setEditMode(prev => !prev);
   };
 
-  // 수정 제출시 기능
+  // 수정 폼 제출 함수
   const onSubmit = async e => {
     e.preventDefault();
     const commentRef = doc(db, "comments", item.id);
 
     // console.log(comment);
     await updateDoc(commentRef, {
+      // 텍스트필드에서 setComment로 변수 comment에 저장한 내용을 컬렉션의 comment필드에 업로드
       comment: comment,
     });
+    // 수정 텍스트필드 없애고 최신화 (리렌더링)
     setEditMode(false);
   };
 
