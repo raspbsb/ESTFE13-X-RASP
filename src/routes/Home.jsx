@@ -21,12 +21,15 @@ import {
   onSnapshot,
 } from "firebase/firestore";
 import { db } from "../firebase";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Comment from "../components/Comment";
+import UploadFileIcon from "@mui/icons-material/UploadFile";
 
 function Home({ userId }) {
   const [comment, setComment] = useState("");
   const [comments, setComments] = useState([]);
+  const [attachment, setAttachment] = useState(null);
+  const fileInputRef = useRef(null);
 
   // useEffect로 데이터 조회 결과를 변수명 comments에 할당
   const getComments = async () => {
@@ -70,11 +73,32 @@ function Home({ userId }) {
     }
   };
 
+  // 로컬에서 파일 경로 불러오기
+  const onFileChange = e => {
+    // console.log(e.target.files[0]);
+    const file = e.target.files[0];
+
+    const reader = new FileReader();
+    reader.onload = e => {
+      // console.log(e.target.result);
+      setAttachment(e.target.result);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const onClearFile = () => {
+    setAttachment(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = null;
+    }
+  };
+
   return (
     <>
       <Typography variant="h2" component="h2">
         Home
       </Typography>
+
       <Box component="form" sx={{ mt: 2 }} onSubmit={onSubmit}>
         <TextField
           fullWidth
@@ -89,14 +113,43 @@ function Home({ userId }) {
           onChange={handleChange}
         />
 
+        <Box sx={{ mt: 1, display: "flex", alignItems: "center", gap: 1 }}>
+          <Button component="label" type="button" variant="outlined" startIcon={<UploadFileIcon />}>
+            이미지 선택
+            <input type="file" hidden ref={fileInputRef} accept="image/*" onChange={onFileChange} />
+          </Button>
+          {attachment && (
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <Box
+                component="img"
+                src={attachment}
+                alt="미리보기"
+                sx={{
+                  width: 50,
+                  height: 50,
+                  objectFit: "cover",
+                  border: "1px solid #ddd",
+                  borderRadius: 3,
+                }}
+              ></Box>
+              <Button type="button" variant="outlined" size="small" onClick={onClearFile}>
+                파일 첨부 취소
+              </Button>
+            </Box>
+          )}
+        </Box>
+
         <Button sx={{ mt: 2 }} type="submit" variant="contained">
           글쓰기
         </Button>
       </Box>
+
       <Divider sx={{ my: 3 }} />
+
       <Typography variant="h4" component="h3">
         Comments
       </Typography>
+
       <List sx={{ width: "100%" }}>
         {/* commentsArray의 값을 ListItem으로 출력 */}
         {comments.map(item => (
