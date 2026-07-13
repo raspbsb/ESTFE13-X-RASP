@@ -5,14 +5,14 @@ import Profile from "../routes/Profile";
 
 import { Routes, Route } from "react-router";
 
-function Router({ isLoggedIn }) {
+function Router({ isLoggedIn, userId }) {
   return (
     <>
       {isLoggedIn && <Nav />}
       <Routes>
         {isLoggedIn ? (
           <>
-            <Route path="/" element={<Home />} />
+            <Route path="/" element={<Home userId={userId} />} />
             <Route path="/profile" element={<Profile />} />
           </>
         ) : (

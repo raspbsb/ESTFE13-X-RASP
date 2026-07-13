@@ -24,7 +24,7 @@ import { db } from "../firebase";
 import { useEffect, useState } from "react";
 import Comment from "../components/Comment";
 
-function Home() {
+function Home({ userId }) {
   const [comment, setComment] = useState("");
   const [comments, setComments] = useState([]);
 
@@ -59,6 +59,7 @@ function Home() {
         // comment: comment,
         comment,
         date: serverTimestamp(),
+        uid: userId,
       });
 
       console.log("다음 글이 추가되었습니다 : ", docRef.id);
@@ -99,7 +100,7 @@ function Home() {
       <List sx={{ width: "100%" }}>
         {/* commentsArray의 값을 ListItem으로 출력 */}
         {comments.map(item => (
-          <Comment key={item.id} item={item} />
+          <Comment key={item.id} item={item} isShown={userId === item.uid} />
         ))}
       </List>
     </>
