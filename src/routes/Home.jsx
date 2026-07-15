@@ -21,7 +21,7 @@ import {
   onSnapshot,
 } from "firebase/firestore";
 import { db, storageService } from "../firebase";
-import { ref, uploadString } from "firebase/storage";
+import { getDownloadURL, ref, uploadString } from "firebase/storage";
 import { useEffect, useState, useRef } from "react";
 
 import { v4 as uuidv4 } from "uuid";
@@ -73,26 +73,33 @@ function Home({ userId }) {
   const onSubmit = async e => {
     e.preventDefault();
 
-    const storageRef = ref(storage, `${userId}/${uuidv4()}`);
-
-    uploadString(storageRef, attachment, "data_url").then(snapshot => {
-      console.log("파일 업로드가 완료되었습니다. 파일 형식 : data_url string");
-    });
-
     try {
-      const docRef = await addDoc(collection(db, "comments"), {
-        // comment: comment,
+      let imageURL = null;
+
+      // 첨부파일이 있으면
+      if (attachment) {
+        const storageRef = ref(storage, `${userId}/${uuidv4()}`);
+        const snapshot = await uploadString(storageRef, attachment, "data_url");
+        imageURL = await getDownloadURL(storageRef); // 다운로드할 이미지의 절대 경로
+      }
+
+      const data = {
         comment,
         date: serverTimestamp(),
         uid: userId,
-      });
+        image: imageURL,
+      };
 
+      const docRef = await addDoc(collection(db, "comments"), data);
       console.log("다음 글이 추가되었습니다 : ", docRef.id);
+      console.log("파일 업로드가 완료되었습니다 : data_url string");
+
       // 텍스트필드 초기화
       setComment("");
       // getComments();
+      onClearFile();
     } catch (e) {
-      console.error("글 추가 시 에러가 발생했습니다.", e);
+      console.error("글 추가시 에러가 발생했습니다.", e);
     }
   };
 
@@ -112,7 +119,7 @@ function Home({ userId }) {
   const onClearFile = () => {
     setAttachment(null);
     if (fileInputRef.current) {
-      fileInputRef.current.value = null;
+      fileInputRef.current.value = "";
     }
   };
 
