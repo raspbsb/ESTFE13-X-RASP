@@ -40,8 +40,8 @@ function Home({ userId }) {
 
   // 서버에서 코멘트 배열을 가져와서 comments 변수에 상태 저장하는 함수
   const getComments = async () => {
-    // 서버에 보낼 쿼리 : db의 comments 컬렉션에서 date필드 내림차순으로 내용 5개 가져오기
-    const q = query(collection(db, "comments"), orderBy("date", "desc"), limit(5));
+    // 서버에 보낼 쿼리 : db의 comments 컬렉션에서 date필드 내림차순으로 내용 n개 가져오기
+    const q = query(collection(db, "comments"), orderBy("date", "desc"), limit(10));
 
     // firestore의 데이터를 실시간 감시하다가 데이터가 변경될 때마다 아래 함수 실행
     onSnapshot(q, querySnapshot => {
@@ -90,13 +90,15 @@ function Home({ userId }) {
         image: imageURL,
       };
 
+      // 서버에 데이터 추가 요청
       const docRef = await addDoc(collection(db, "comments"), data);
+
       console.log("다음 글이 추가되었습니다 : ", docRef.id);
       console.log("파일 업로드가 완료되었습니다 : data_url string");
 
       // 텍스트필드 초기화
       setComment("");
-      // getComments();
+      // 파일 초기화
       onClearFile();
     } catch (e) {
       console.error("글 추가시 에러가 발생했습니다.", e);
@@ -116,6 +118,7 @@ function Home({ userId }) {
     reader.readAsDataURL(file);
   };
 
+  // 미리보기 파일 초기화하는 함수
   const onClearFile = () => {
     setAttachment(null);
     if (fileInputRef.current) {
@@ -183,7 +186,7 @@ function Home({ userId }) {
       <List sx={{ width: "100%" }}>
         {/* commentsArray의 값을 ListItem으로 출력 */}
         {comments.map(item => (
-          <Comment key={item.id} item={item} isShown={userId === item.uid} />
+          <Comment key={item.id} item={item} isHaveAuthority={userId === item.uid} />
         ))}
       </List>
     </>

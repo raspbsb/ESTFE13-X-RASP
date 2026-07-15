@@ -1,9 +1,10 @@
 import { Box, Button, TextField, Divider, ListItem, ListItemText, Stack } from "@mui/material";
+import { db, storageService } from "../firebase";
 import { doc, deleteDoc, updateDoc } from "firebase/firestore";
-import { db } from "../firebase";
 import { useState } from "react";
+import { deleteObject, ref } from "firebase/storage";
 
-export default function Comment({ item, isShown }) {
+export default function Comment({ item, isHaveAuthority }) {
   const [editMode, setEditMode] = useState(false);
   const [comment, setComment] = useState(item.comment);
 
@@ -12,7 +13,21 @@ export default function Comment({ item, isShown }) {
   // 글 삭제
   const handleDelete = async () => {
     if (!window.confirm("정말 삭제할까요?")) return;
-    await deleteDoc(doc(db, "comments", item.id));
+
+    try {
+      await deleteDoc(doc(db, "comments", item.id));
+
+      if (item.image) {
+        const storage = storageService;
+        // 삭제를 위한 위치 참조 생성
+        const storageRef = ref(storage, item.image);
+        // 파일 삭제
+        deleteObject(storageRef);
+      }
+    } catch (error) {
+      console.error("삭제오류", error);
+      alert("삭제 중 오류가 발생했습니다.");
+    }
   };
 
   // 수정모드 온오프
@@ -71,7 +86,27 @@ export default function Comment({ item, isShown }) {
             secondary={item.date?.toDate ? item.date.toDate().toLocaleString() : "작성시간 없음"}
           />
 
-          {isShown && (
+          {
+            // 이미지가 있으면 이미지 출력
+            item.image && (
+              <Box sx={{ marginRight: "5px", display: "flex", alignItems: "center", gap: 1 }}>
+                <Box
+                  component="img"
+                  src={item.image}
+                  alt="미리보기"
+                  sx={{
+                    width: 50,
+                    height: 50,
+                    objectFit: "cover",
+                    border: "1px solid #ddd",
+                    borderRadius: 3,
+                  }}
+                ></Box>
+              </Box>
+            )
+          }
+
+          {isHaveAuthority && (
             <Stack direction="row" spacing={1}>
               <Button variant="outlined" size="small" onClick={toggleEditMode}>
                 수정
