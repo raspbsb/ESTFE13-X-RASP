@@ -20,8 +20,11 @@ import {
   limit,
   onSnapshot,
 } from "firebase/firestore";
-import { db } from "../firebase";
+import { db, storageService } from "../firebase";
+import { ref, uploadString } from "firebase/storage";
 import { useEffect, useState, useRef } from "react";
+
+import { v4 as uuidv4 } from "uuid";
 import Comment from "../components/Comment";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 
@@ -30,6 +33,10 @@ function Home({ userId }) {
   const [comments, setComments] = useState([]);
   const [attachment, setAttachment] = useState(null);
   const fileInputRef = useRef(null);
+
+  // 스토리지, 참조 초기화
+  const storage = storageService;
+  const storageRef = ref(storage);
 
   // 서버에서 코멘트 배열을 가져와서 comments 변수에 상태 저장하는 함수
   const getComments = async () => {
@@ -65,6 +72,13 @@ function Home({ userId }) {
   // submit(글쓰기 버튼 클릭) 되면 현재 접속된 계정의 유저 id, 현재 시간, 댓글 내용을 서버 DB에 추가하고 리렌더링, 실패하면 콘솔에 에러메시지
   const onSubmit = async e => {
     e.preventDefault();
+
+    const storageRef = ref(storage, `${userId}/${uuidv4()}`);
+
+    uploadString(storageRef, attachment, "data_url").then(snapshot => {
+      console.log("파일 업로드가 완료되었습니다. 파일 형식 : data_url string");
+    });
+
     try {
       const docRef = await addDoc(collection(db, "comments"), {
         // comment: comment,
